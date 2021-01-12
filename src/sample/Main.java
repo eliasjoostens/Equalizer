@@ -32,9 +32,14 @@ public class Main extends Application {
     String[] frequencies = {"31.25", "62.5", "125","250", "500", "1K", "2K", "4K", "8K", "16K"};
 
     /* This is how to declare HashMap */
-    HashMap<String, Integer> filterFrequencies = new HashMap<String, Integer>();
+    HashMap<String, Short> filterFrequencies = new HashMap<String, Short>();
 
     Text textSongFile;
+
+    short[] filterFrequencyValues;
+
+    WavProcessor wavProcessor;
+    MusicPlayerThread musicPlayerThread;
 
     private VBox makeSlider(int value, String caption)
     {
@@ -53,11 +58,11 @@ public class Main extends Application {
                 {
                     int i = newvalue.intValue();
                     text.setText(Integer.toString(i));
-                    filterFrequencies.put(caption, newvalue.intValue());
+                    filterFrequencies.put(caption, newvalue.shortValue());
 
                 } );
         s.setValue(value);
-        filterFrequencies.put(caption, value);
+        filterFrequencies.put(caption, (short) value);
         VBox box = new VBox(10, text2, s, text);
         box.setPadding(new Insets(20));
         box.setAlignment(Pos.CENTER);
@@ -67,50 +72,66 @@ public class Main extends Application {
         return box;
     }
 
-    private int[] getFilterFrequencyValues() {
-        int[] filterFrequencyValues = new int[10];
+    private short[] getFilterFrequencyValues() {
+        short[] filterFrequencyValues = new short[10];
         for (int i = 0; i < 10; ++i) {
             filterFrequencyValues[i] = filterFrequencies.get(frequencies[i]);
-            System.out.println(filterFrequencyValues[i]);
         }
         return filterFrequencyValues;
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Button button= new Button("Selecteer liedje");
+        Button butonSelect= new Button("Selecteer liedje");
         final FileChooser fileChooser = new FileChooser();
-
-        button.setOnAction(
-            new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(final ActionEvent e) {
-                    File file = fileChooser.showOpenDialog(primaryStage);
-                    if (file != null) {
-                        System.out.println(file.getAbsolutePath());
-                        textSongFile.setText(file.getAbsolutePath());
-                        WavProcessor wavProcessor = new WavProcessor();
-                        //wavProcessor.processWavFile("C:\\Dig-X Year 2\\Semester 1\\Java Advanced\\Short burst Project\\muziek\\Beethoven_stereo.wav");
-                        //wavProcessor.processWavFile(file.getAbsolutePath());
+        butonSelect.setOnAction(
+                new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(final ActionEvent e) {
+                        File file = fileChooser.showOpenDialog(primaryStage);
+                        if (file != null) {
+                            System.out.println(file.getAbsolutePath());
+                            textSongFile.setText(file.getAbsolutePath());
+                        }
                     }
-                }
-            });
+                });
 
+        Button buttonPlay = new Button("Speel");
 
-        Button buttonFilter = new Button("Speel");
+        buttonPlay.setOnAction(value ->  {
+            boolean startThread = false;
 
-        buttonFilter.setOnAction(value ->  {
-            getFilterFrequencyValues();
+            if (musicPlayerThread == null) {
+                startThread = true;
+            } else if (! musicPlayerThread.isAlive()) {
+                startThread = true;
+            }
+
+            if (startThread) {
+                filterFrequencyValues = getFilterFrequencyValues();
+                wavProcessor = new WavProcessor();
+                musicPlayerThread = new MusicPlayerThread(wavProcessor);
+                musicPlayerThread.start();
+                musicPlayerThread.playNow(textSongFile.getText(), filterFrequencyValues);
+            }
+    });
+
+        Button buttonStop = new Button("Stop");
+
+        buttonStop.setOnAction(value ->  {
+            musicPlayerThread.stop();
         });
+
 
         GridPane gridPane = new GridPane();
 
-        gridPane.add(button,0,1);
+        gridPane.add(butonSelect,0,1, 2, 1);
 
-        textSongFile = new Text("liedje");
-        gridPane.add(textSongFile,1,1);
+        textSongFile = new Text("D:\\development\\filter\\muziek\\Beethoven_stereo.wav");
+        gridPane.add(textSongFile,2,1, 5, 1);
 
-        gridPane.add(buttonFilter,0,2);
+        gridPane.add(buttonPlay,0,2);
+        gridPane.add(buttonStop,0,3);
 
         VBox[] sliderVboxes =  new VBox[10];
 
@@ -118,9 +139,6 @@ public class Main extends Application {
             sliderVboxes[i] = makeSlider(50, frequencies[i] );
             gridPane.add(sliderVboxes[i], i, 0);
         }
-
-        //int[] filterFrequencyValues = getFilterFrequencyValues(sliderVboxes);
-
 
         Scene scene1= new Scene(gridPane, 600, 500);
 
@@ -131,7 +149,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) {
-        launch(args);
+       launch(args);
     }
 }
 
