@@ -4,6 +4,7 @@ public class MusicPlayerThread extends Thread {
     WavProcessor wavProcessor;
     String wavFileName;
     short[] filterFrequencyValues;
+    int frequencyShift;
 
     boolean quit;
     boolean playNow;
@@ -14,7 +15,8 @@ public class MusicPlayerThread extends Thread {
         playNow = false;
     }
 
-    public void playNow(String fileName, short[] filterFreqValues) {
+    public void playNow(String fileName, short[] filterFreqValues, int freqShift) {
+        frequencyShift = freqShift;
         filterFrequencyValues = filterFreqValues;
         wavFileName = fileName;
         playNow = true;
@@ -36,7 +38,7 @@ public class MusicPlayerThread extends Thread {
             // if we have to play the sound, do it!
             if ( playNow ) {
                 playNow = false;
-                wavProcessor.processWavFile(wavFileName, filterFrequencyValues);
+                wavProcessor.processWavFile(wavFileName, filterFrequencyValues, frequencyShift);
 
             }
             // go back and wait again for 10 ms...

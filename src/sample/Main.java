@@ -35,8 +35,14 @@ public class Main extends Application {
     HashMap<String, Short> filterFrequencies = new HashMap<String, Short>();
 
     Text textSongFile;
+    Text textNumberOfChannels;
+    Text textSampleSizeBits;
+    Text textSampleRate;
+    Text textBigEndian;
 
     short[] filterFrequencyValues;
+
+    int frequencyShift;
 
     WavProcessor wavProcessor;
     MusicPlayerThread musicPlayerThread;
@@ -71,6 +77,41 @@ public class Main extends Application {
         box.setMaxWidth(60);
         return box;
     }
+
+    private VBox makeHorizontalSlider(int value, String caption)
+    {
+        Text text = new Text();
+        Text text2 = new Text(caption);
+        text.setFont(new Font("sans-serif", 10));
+        Slider s = new Slider();
+        s.setOrientation(Orientation.HORIZONTAL);
+        s.setPrefWidth(6000);
+        s.setShowTickMarks(true);
+        s.setMajorTickUnit(100);
+        s.setMinorTickCount(-1000);
+        s.setShowTickLabels(false);
+        s.valueProperty().addListener(
+                (observable, oldvalue, newvalue) ->
+                {
+                    int i = newvalue.intValue();
+                    text.setText(Integer.toString(i) + " Hz");
+                    frequencyShift = i;
+
+                } );
+        s.setValue(value);
+        s.setMax(3000);
+        s.setMin(-3000);
+        filterFrequencies.put(caption, (short) value);
+        VBox box = new VBox(10, text2, s, text);
+        box.setPadding(new Insets(20));
+        box.setAlignment(Pos.CENTER);
+        box.setMinWidth(600);
+        box.setPrefWidth(600);
+        box.setMaxWidth(600);
+        return box;
+    }
+
+
 
     private short[] getFilterFrequencyValues() {
         short[] filterFrequencyValues = new short[10];
@@ -110,9 +151,16 @@ public class Main extends Application {
             if (startThread) {
                 filterFrequencyValues = getFilterFrequencyValues();
                 wavProcessor = new WavProcessor();
-                musicPlayerThread = new MusicPlayerThread(wavProcessor);
-                musicPlayerThread.start();
-                musicPlayerThread.playNow(textSongFile.getText(), filterFrequencyValues);
+                textNumberOfChannels.setText("Number of channels : " + String.valueOf(wavProcessor.getNumberOfChannels(textSongFile.getText())));
+                textSampleSizeBits.setText("Sample size : " + String.valueOf(wavProcessor.getSampleSize(textSongFile.getText()) + " bits"));
+                textSampleRate.setText("Sample rate : " + String.valueOf(wavProcessor.getSampleRate(textSongFile.getText())+" Hz"));
+                textBigEndian.setText(String.valueOf(wavProcessor.getEndianness(textSongFile.getText())));
+
+                if (wavProcessor.getNumberOfChannels(textSongFile.getText()) != 0) {
+                    musicPlayerThread = new MusicPlayerThread(wavProcessor);
+                    musicPlayerThread.start();
+                    musicPlayerThread.playNow(textSongFile.getText(), filterFrequencyValues, frequencyShift);
+                }
             }
     });
 
@@ -121,6 +169,9 @@ public class Main extends Application {
         buttonStop.setOnAction(value ->  {
             musicPlayerThread.stop();
         });
+
+
+
 
 
         GridPane gridPane = new GridPane();
@@ -133,12 +184,25 @@ public class Main extends Application {
         gridPane.add(buttonPlay,0,2);
         gridPane.add(buttonStop,0,3);
 
+        textNumberOfChannels = new Text();
+        textSampleSizeBits = new Text();
+        textSampleRate = new Text();
+        textBigEndian = new Text();
+
+        gridPane.add(textNumberOfChannels,0,4);
+        gridPane.add(textSampleSizeBits,0,5);
+        gridPane.add(textSampleRate,0,6);
+        gridPane.add(textBigEndian,0,7);
+
         VBox[] sliderVboxes =  new VBox[10];
 
         for(int i=0; i<10; i++) {
             sliderVboxes[i] = makeSlider(50, frequencies[i] );
             gridPane.add(sliderVboxes[i], i, 0);
         }
+
+        VBox horizontalSlider = makeHorizontalSlider(0, "Frequentie verschuiving");
+        gridPane.add(horizontalSlider, 0, 8, 6, 1);
 
         Scene scene1= new Scene(gridPane, 600, 500);
 

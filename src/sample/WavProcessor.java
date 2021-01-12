@@ -62,7 +62,76 @@ public class WavProcessor {
         return FourierFilterCoefficients;
     }
 
-    void processWavFile(String inputWavFileName, short[] filterFrequencyValues) {
+    int getNumberOfChannels(String inputWavFileName) {
+        File audioFile = new File(inputWavFileName);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            AudioFormat format = audioStream.getFormat();
+
+            return format.getChannels();
+        } catch (UnsupportedAudioFileException ex) {
+            System.out.println("The specified audio file is not supported.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error playing the audio file.");
+            ex.printStackTrace();
+        }
+        return 0;
+    }
+
+    int getSampleSize(String inputWavFileName) {
+        File audioFile = new File(inputWavFileName);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            AudioFormat format = audioStream.getFormat();
+
+            return format.getSampleSizeInBits();
+        } catch (UnsupportedAudioFileException ex) {
+            System.out.println("The specified audio file is not supported.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error playing the audio file.");
+            ex.printStackTrace();
+        }
+        return 0;
+    }
+
+    String getEndianness(String inputWavFileName) {
+        File audioFile = new File(inputWavFileName);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            AudioFormat format = audioStream.getFormat();
+            if (format.isBigEndian()) {
+                return "Big Endian";
+            } else return "Little Endian";
+        } catch (UnsupportedAudioFileException ex) {
+            System.out.println("The specified audio file is not supported.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error playing the audio file.");
+            ex.printStackTrace();
+        }
+        return "Invalid";
+    }
+
+    float getSampleRate(String inputWavFileName) {
+        File audioFile = new File(inputWavFileName);
+        try {
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
+            AudioFormat format = audioStream.getFormat();
+
+            return format.getSampleRate();
+        } catch (UnsupportedAudioFileException ex) {
+            System.out.println("The specified audio file is not supported.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error playing the audio file.");
+            ex.printStackTrace();
+        }
+        return 0;
+    }
+
+    void processWavFile(String inputWavFileName, short[] filterFrequencyValues, int frequencyShift) {
         short[] FourierFilterCoefficients = calculateFourierFilterCoefficients(filterFrequencyValues);
 
         File audioFile = new File(inputWavFileName);
@@ -72,12 +141,6 @@ public class WavProcessor {
 
             numberOfchannels = format.getChannels();
             sampleSizeBytes = format.getFrameSize() / format.getChannels();
-
-            System.out.println("Number of channels = " + format.getChannels());
-            System.out.println("Sample size in bits = " + format.getSampleSizeInBits());
-            System.out.println("Frame size in bytes = " + format.getFrameSize());
-            System.out.println("Big endian = " + format.isBigEndian());
-            System.out.println("Sample rate = " + format.getSampleRate());
 
             DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
             SourceDataLine audioLine = (SourceDataLine) AudioSystem.getLine(info);
@@ -106,6 +169,9 @@ public class WavProcessor {
                 for (int i = 0; i < 1024; ++i) {
                     shortArrayChannel1[i] = shortsRead[i*numberOfchannels];
                 }
+
+                int numberOfFrequenciesToShift = Math.round(frequencyShift/(format.getSampleRate() / 1024));
+                System.out.println("numberOfFrequenciesToShift = " + numberOfFrequenciesToShift);
 
                 if (numberOfchannels == 2) {
                     for (int i = 0; i < 1024; ++i) {
