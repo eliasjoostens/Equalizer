@@ -1,4 +1,4 @@
-package sample;
+package equalizer;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -13,7 +13,6 @@ public class WavProcessor {
     }
 
     String inputWavFileName;
-
     // number of channels in WAV file
     int numberOfchannels = 0;
     // sample size WAV file
@@ -25,7 +24,7 @@ public class WavProcessor {
     }
 
     // calculates fft, multiplies each frequency component by filter frequency values,  calculates inverse fft
-    public void applyFilter(short[] samples, short[] filterFrequencyValues) {
+    public void applyFilter(short[] samples, short[] filterFrequencyValues, int numberOfFrequenciesToShift) {
         int length = samples.length;
         DoubleFFT_1D dfft1d = new DoubleFFT_1D(length);
         double[] fftSamples = new double[length];
@@ -33,14 +32,29 @@ public class WavProcessor {
         int bins = fftSamples.length / 2;
         //copy samples
         for (int i = 0; i < length; i++) fftSamples[i] = samples[i];
+
         //FT samples
         dfft1d.realForward(fftSamples);
+
+        if (numberOfFrequenciesToShift != 0) {
+            double[] fftSamplesShifted = new double[length];
+
+            if (numberOfFrequenciesToShift > 0) {
+                System.arraycopy(fftSamples, 0, fftSamplesShifted, numberOfFrequenciesToShift, length - numberOfFrequenciesToShift);
+            }
+            if (numberOfFrequenciesToShift < 0) {
+                System.arraycopy(fftSamples, -numberOfFrequenciesToShift, fftSamplesShifted, 0, length + numberOfFrequenciesToShift);
+            }
+            System.arraycopy(fftSamplesShifted, 0, fftSamples, 0, length);
+        }
+
         for (int i = 0; i < bins; i++) {
             //apply gain to real...
             fftSamples[2 * i] = (fftSamples[2 * i] * filterFrequencyValues[i]) / 50 ;
             //and imaginary elements of FT-ed samples
             fftSamples[2 * i + 1] = (fftSamples[2 * i + 1] * filterFrequencyValues[i]) / 50;
         }
+
         //inverse FT samples
         dfft1d.realInverse(fftSamples, true);
 
@@ -179,9 +193,9 @@ public class WavProcessor {
                     }
                 }
 
-                applyFilter(shortArrayChannel1, FourierFilterCoefficients);
+                applyFilter(shortArrayChannel1, FourierFilterCoefficients, numberOfFrequenciesToShift);
                 if (numberOfchannels == 2) {
-                    applyFilter(shortArrayChannel2, FourierFilterCoefficients);
+                    applyFilter(shortArrayChannel2, FourierFilterCoefficients, numberOfFrequenciesToShift);
                 }
 
                 // to turn shorts back to bytes.

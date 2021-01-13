@@ -1,4 +1,4 @@
-package sample;
+package equalizer;
 
 public class MusicPlayerThread extends Thread {
     WavProcessor wavProcessor;
@@ -39,7 +39,6 @@ public class MusicPlayerThread extends Thread {
             if ( playNow ) {
                 playNow = false;
                 wavProcessor.processWavFile(wavFileName, filterFrequencyValues, frequencyShift);
-
             }
             // go back and wait again for 10 ms...
         }
