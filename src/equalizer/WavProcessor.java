@@ -76,6 +76,7 @@ public class WavProcessor {
         return FourierFilterCoefficients;
     }
 
+    //Out of the header we get some information about:
     int getNumberOfChannels(String inputWavFileName) {
         File audioFile = new File(inputWavFileName);
         try {

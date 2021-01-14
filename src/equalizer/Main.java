@@ -23,8 +23,6 @@ import java.util.HashMap;
 public class Main extends Application {
 
     String[] frequencies = {"31.25", "62.5", "125","250", "500", "1K", "2K", "4K", "8K", "16K"};
-
-    /* This is how to declare HashMap */
     HashMap<String, Short> filterFrequencies = new HashMap<String, Short>();
 
     Text textSongFile;
@@ -42,6 +40,7 @@ public class Main extends Application {
     WavProcessor wavProcessor;
     MusicPlayerThread musicPlayerThread;
 
+    //Make sliders with javafx
     private VBox makeSlider(String caption)
     {
         Text text = new Text();
@@ -105,6 +104,7 @@ public class Main extends Application {
         return box;
     }
 
+    //Get values for each frequency
     private short[] getFilterFrequencyValues() {
         short[] filterFrequencyValues = new short[10];
         for (int i = 0; i < 10; ++i) {
@@ -113,6 +113,7 @@ public class Main extends Application {
         return filterFrequencyValues;
     }
 
+    //Make pane with sliders and buttons + added some CSS
     @Override
     public void start(Stage primaryStage) throws Exception{
         GridPane gridPane = new GridPane();
@@ -172,8 +173,7 @@ public class Main extends Application {
                     }
                 });
 
-        textSongFile = new Text("D:\\development\\filter\\muziek\\Beethoven_stereo.wav");
-
+        textSongFile = new Text("");
 
         HBox panelSelectSong = new HBox();
         panelSelectSong.setPadding(new Insets(15, 12, 15, 12));
@@ -196,7 +196,6 @@ public class Main extends Application {
         panelSongInfo.getChildren().add(textBigEndian);
 
         gridPane.add(panelSongInfo,0,3);
-
 
         Button buttonPlay = new Button("Speel");
         buttonPlay.setStyle(cssLayoutButton);

@@ -28,19 +28,16 @@ public class MusicPlayerThread extends Thread {
 
     public void run() {
         while ( !quit ) {
-            // wait 10 ms, then check if need to play
             try {
                 Thread.sleep( 10 );
             } catch ( InterruptedException e ) {
                 return;
             }
 
-            // if we have to play the sound, do it!
             if ( playNow ) {
                 playNow = false;
                 wavProcessor.processWavFile(wavFileName, filterFrequencyValues, frequencyShift);
             }
-            // go back and wait again for 10 ms...
         }
     }
 }
